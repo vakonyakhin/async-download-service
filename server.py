@@ -1,7 +1,8 @@
 import logging
-from os import path, environ
+import os
 import aiofiles
-from asyncio import web, create_subprocess_exec, subprocess, sleep, CancelledError
+from asyncio import create_subprocess_exec, subprocess, sleep, CancelledError
+from aiohttp import web
 
 
 async def handle_index_page(request):
@@ -12,16 +13,16 @@ async def handle_index_page(request):
 
 async def get_archive_handler(request):
 
-    chunk_size_bytes = int(environ['CHUNK_SIZE'])
-    delay = int(environ['DELAY'])
-    storage_dir = environ['STORAGE_DIR']
+    chunk_size_bytes = int(os.environ['CHUNK_SIZE'])
+    delay = int(os.environ['DELAY'])
+    storage_dir = os.environ['STORAGE_DIR']
     
     path = request.match_info.get('archive_hash')
-    storage_photo = path.join(storage_dir, path)
-    logging.info(f'storage dir is {storage_dir}')
+    storage_photo = os.path.join(storage_dir, path)
+    logging.info(f'storage dir is {storage_photo}')
 
 
-    if not path.exists(storage_dir):
+    if not os.path.exists(storage_photo):
         logging.info(f'Folder does not exist')
         await handle_404(request)
 
@@ -30,7 +31,7 @@ async def get_archive_handler(request):
     response.headers['Content-Disposition'] = f'attachment; filename=photos.zip'
     await response.prepare(request)
 
-    zip_params = ['zip', '-r', '-', '-j', storage_dir]
+    zip_params = ['zip', '-r', '-', '-j', storage_photo]
     proc = await create_subprocess_exec(
             *zip_params,
         stdout=subprocess.PIPE,
@@ -72,7 +73,7 @@ async def handle_404(request):
 
 if __name__ == '__main__':
                
-    logging_level = environ["LOG_LEVEL"]
+    logging_level = os.environ["LOG_LEVEL"]
 
     logging.basicConfig(filename='app.log', filemode='w', level=logging_level)
     logging.debug(f'logging level is --- {logging_level}')
