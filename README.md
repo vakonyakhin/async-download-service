@@ -45,8 +45,11 @@ docker run -d -p 8080:8080 <image_name>
 
 '''
 ENV STORAGE_DIR=./test_photos/ # general path for stored files
+
 ENV DELAY=1 # in seconds
+
 ENV LOG_LEVEL=DEBUG # using logging module level
+
 ENV CHUNK_SIZE=300000 # in bytes
 '''
 
@@ -113,8 +116,11 @@ In service operation, environment variables with default values set during assem
 
 '''
 ENV STORAGE_DIR=./test_photos/ # general path for stored files
+
 ENV DELAY=1 # in seconds
+
 ENV LOG_LEVEL=DEBUG # using logging module level
+
 ENV CHUNK_SIZE=300000 # in bytes
 '''
 
