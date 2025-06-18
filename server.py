@@ -18,11 +18,11 @@ async def get_archive_handler(request):
     storage_dir = os.environ['STORAGE_DIR']
     
     path = request.match_info.get('archive_hash')
-    storage_photo = os.path.join(storage_dir, path)
-    logging.info(f'storage dir is {storage_photo}')
+    download_dir= os.path.join(storage_dir, path)
+    logging.info(f'storage dir is {download_dir}')
 
 
-    if not os.path.exists(storage_photo):
+    if not os.path.exists(download_dir):
         logging.info(f'Folder does not exist')
         await handle_404(request)
 
@@ -31,7 +31,7 @@ async def get_archive_handler(request):
     response.headers['Content-Disposition'] = f'attachment; filename=photos.zip'
     await response.prepare(request)
 
-    zip_params = ['zip', '-r', '-', '-j', storage_photo]
+    zip_params = ['zip', '-r', '-', '-j', download_dir]
     proc = await create_subprocess_exec(
             *zip_params,
         stdout=subprocess.PIPE,
