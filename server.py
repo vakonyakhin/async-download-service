@@ -19,7 +19,7 @@ async def get_archive_handler(request):
     
     path = request.match_info.get('archive_hash')
     download_dir= os.path.join(storage_dir, path)
-    logging.info(f'storage dir is {download_dir}')
+    logging.info(f'download dir is {download_dir}')
 
 
     if not os.path.exists(download_dir):
