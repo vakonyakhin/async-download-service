@@ -51,6 +51,7 @@ ENV DELAY=1 # in seconds
 ENV LOG_LEVEL=DEBUG # using logging module level
 
 ENV CHUNK_SIZE=300000 # in bytes
+
 '''
 
 Для изменения параметров по умолчанию при старте используйте парамерт -e
@@ -100,21 +101,24 @@ For the microservice to work, Docker must be installed.
 
 To create an image, use the command:
 
-'''
+```bash
 docker build <image_name> .
-'''
+```
 
 ## How to start
 After building, run the following command:
 
 
+```bash
 docker run -d -p 8080:8080 <image_name>
+```
+
 The server will start on port 8080. To check its operation, navigate to http://127.0.0.1:8080/ in your browser.
 
 ## Changing parameters
 In service operation, environment variables with default values set during assembly are used:
 
-'''
+'''bash
 ENV STORAGE_DIR=./test_photos/ # general path for stored files
 
 ENV DELAY=1 # in seconds
@@ -126,14 +130,15 @@ ENV CHUNK_SIZE=300000 # in bytes
 
 To change these default parameters at startup, use the parameter -e:
 
-'''
+'''bash
 docker run -d -p 8080:8080 -e DELAY=1 <image_name>
 '''
 
 ## Deploying on a server
 
+'''bash
+docker run -d -p 8080:8080 <image_name>
 '''
-docker run -d -p 8080:8080 <image_name>'''
 
 Then redirect all requests starting with /archive/ to the microservice. For example:
 
