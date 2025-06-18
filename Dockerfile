@@ -10,7 +10,7 @@ ENV PYTHONUNBUFFERED=1
 # Install pip requirements
 COPY requirements.txt .
 RUN python -m pip install -r requirements.txt
-RUN apt-get update && apt-get upgrade && apt-get install -y zip
+RUN apt-get update && apt-get upgrade -y && apt-get install -y zip
 
 
 WORKDIR /app
