@@ -49,18 +49,27 @@ async def get_archive_handler(request):
             await sleep(delay)
         logging.debug('Archive streaming complete.')
 
+        stdout, stderr = await proc.communicate()
+        logging.debug(
+            f'Final communication with process {proc.pid}')
+
     except ConnectionResetError:
         logging.debug('Connection reset by client.')
         logging.debug(f'Terminating ZIP process PID={proc.pid}')
-        proc.terminate()
-        logging.debug('ZIP process terminated.')
+
 
     except CancelledError:
         logging.debug('Coroutine cancelled.')
-        proc.terminate()
         raise
 
     finally:
+        if proc.returncode is None:
+            proc.terminate()
+            logging.debug(f'ZIP process {proc.pid} terminated.')
+        elif proc.returncode != 0:
+            logging.error(
+                f'Zip process failed with exit code {proc.returncode}'
+                )
         return response
 
 
