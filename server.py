@@ -6,58 +6,57 @@ from aiohttp import web
 
 
 async def handle_index_page(request):
+    """Handle GET requests for the root page."""
     async with aiofiles.open('index.html', mode='r') as index_file:
         index_contents = await index_file.read()
     return web.Response(text=index_contents, content_type='text/html')
 
 
 async def get_archive_handler(request):
-
+    """Handle GET requests for archiving files."""
     chunk_size_bytes = int(os.environ['CHUNK_SIZE'])
     delay = int(os.environ['DELAY'])
     storage_dir = os.environ['STORAGE_DIR']
-    
-    path = request.match_info.get('archive_hash')
-    download_dir= os.path.join(storage_dir, path)
-    logging.info(f'download dir is {download_dir}')
 
+    path = request.match_info.get('archive_hash')
+    download_dir = os.path.join(storage_dir, path)
+    logging.info(f'Download directory is {download_dir}')
 
     if not os.path.exists(download_dir):
-        logging.info(f'Folder does not exist')
+        logging.info('Directory does not exist')
         await handle_404(request)
+        return
 
     response = web.StreamResponse()
     response.headers['Content-Type'] = 'application/zip'
-    response.headers['Content-Disposition'] = f'attachment; filename=photos.zip'
-    response.enable_chunked_encoding()
+    response.headers['Content-Disposition'] = 'attachment; filename=photos.zip'
     await response.prepare(request)
 
     zip_params = ['zip', '-r', '-', '-j', download_dir]
     proc = await create_subprocess_exec(
-            *zip_params,
+        *zip_params,
         stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE)
-    logging.debug(f'Run archivw process - {proc.pid}.')
+        stderr=subprocess.PIPE
+        )
+    logging.debug(f'Started ZIP process PID={proc.pid}')
 
     try:
         while not proc.stdout.at_eof():
-
-                stdout_data = await proc.stdout.read(chunk_size_bytes)
-                logging.debug(f'Read archive chunk ... ')
-
-                await response.write(stdout_data)
-                logging.debug(f'Sending archive chunk ..')
-                await sleep(delay)
-        logging.debug('End of the stream')
+            stdout_data = await proc.stdout.read(chunk_size_bytes)
+            logging.debug('Reading archive chunk...')
+            await response.write(stdout_data)
+            logging.debug('Sent archive chunk.')
+            await sleep(delay)
+        logging.debug('Archive streaming complete.')
 
     except ConnectionResetError:
-        logging.debug('Download was interrupted')
-        logging.debug(f'Process pid is necessary to stop - {proc.pid}. ')
+        logging.debug('Connection reset by client.')
+        logging.debug(f'Terminating ZIP process PID={proc.pid}')
         proc.terminate()
-        logging.debug(f'Process stopped... ')
+        logging.debug('ZIP process terminated.')
 
     except CancelledError:
-        logging.debug('Stop coroutines')
+        logging.debug('Coroutine cancelled.')
         proc.terminate()
         raise
 
@@ -66,15 +65,14 @@ async def get_archive_handler(request):
 
 
 async def handle_404(request):
-    return web.Response(text="Архив не существует или был удален", status=404)
+    """Handle all other non-matching routes returning a 404 Not Found."""
+    return web.Response(text="Архив не существует или был удален.", status=404)
 
 
 if __name__ == '__main__':
-               
-    logging_level = os.environ['LOG_LEVEL']
-
+    logging_level = os.environ["LOG_LEVEL"]
     logging.basicConfig(filename='app.log', filemode='w', level=logging_level)
-    logging.debug(f'logging level is --- {logging_level}')
+    logging.debug(f'Logging level set to {logging_level}')
 
     app = web.Application()
     app.add_routes([
@@ -82,4 +80,4 @@ if __name__ == '__main__':
         web.get('/archive/{archive_hash}/', get_archive_handler),
         web.get('/archive/{tail:.*}', handle_404)
     ])
-    web.run_app(app, host='127.0.0.1', port=8888)
+    web.run_app(app)
