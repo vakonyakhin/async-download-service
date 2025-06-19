@@ -29,6 +29,7 @@ async def get_archive_handler(request):
     response = web.StreamResponse()
     response.headers['Content-Type'] = 'application/zip'
     response.headers['Content-Disposition'] = f'attachment; filename=photos.zip'
+    response.enable_chunked_encoding()
     await response.prepare(request)
 
     zip_params = ['zip', '-r', '-', '-j', download_dir]
@@ -39,18 +40,15 @@ async def get_archive_handler(request):
     logging.debug(f'Run archivw process - {proc.pid}.')
 
     try:
-        while True:
+        while not proc.stdout.at_eof():
 
                 stdout_data = await proc.stdout.read(chunk_size_bytes)
                 logging.debug(f'Read archive chunk ... ')
-                if not stdout_data:
-                    logging.debug('End of the stream')
-                    break
 
-                logging.debug(f'Sending archive chunk ..')
                 await response.write(stdout_data)
+                logging.debug(f'Sending archive chunk ..')
                 await sleep(delay)
-
+        logging.debug('End of the stream')
 
     except ConnectionResetError:
         logging.debug('Download was interrupted')
@@ -73,16 +71,15 @@ async def handle_404(request):
 
 if __name__ == '__main__':
                
-    logging_level = os.environ["LOG_LEVEL"]
+    logging_level = os.environ['LOG_LEVEL']
 
     logging.basicConfig(filename='app.log', filemode='w', level=logging_level)
     logging.debug(f'logging level is --- {logging_level}')
 
-    #archive_handler = functools.partial(archivate, storage_dir=args.dir, delay=delay)
     app = web.Application()
     app.add_routes([
         web.get('/', handle_index_page),
         web.get('/archive/{archive_hash}/', get_archive_handler),
         web.get('/archive/{tail:.*}', handle_404)
     ])
-    web.run_app(app)
+    web.run_app(app, host='127.0.0.1', port=8888)
