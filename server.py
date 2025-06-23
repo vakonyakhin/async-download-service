@@ -19,12 +19,21 @@ async def get_archive_handler(request):
     storage_dir = os.environ['STORAGE_DIR']
 
     hash_path = request.match_info.get('archive_hash')
+    if hash_path is None:
+        return web.Response(
+            text="Архив не существует или был удален.",
+            status=404
+            )
+    
     download_dir = os.path.join(storage_dir, hash_path)
     logging.info(f'Download directory is {download_dir}')
     
     if not os.path.exists(download_dir):
         logging.info('Directory does not exist')
-        return web.Response(text="Архив не существует или был удален.", status=404)
+        return web.Response(
+            text="Архив не существует или был удален.",
+            status=404
+            
 
     response = web.StreamResponse()
     response.headers['Content-Type'] = 'application/zip'
