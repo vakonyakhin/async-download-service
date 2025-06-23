@@ -21,7 +21,7 @@ async def get_archive_handler(request):
     path = request.match_info.get('archive_hash')
     download_dir = os.path.join(storage_dir, path)
     logging.info(f'Download directory is {download_dir}')
-
+    
     if not os.path.exists(download_dir):
         logging.info('Directory does not exist')
         return web.Response(text="Архив не существует или был удален.", status=404)
@@ -50,6 +50,7 @@ async def get_archive_handler(request):
 
         stdout, stderr = await proc.communicate()
         logging.info(f'Final communication with process {proc.pid}')
+        logging.info(f'STDOUT: {stdout.decode()}\nSTDERR: {stderr.decode()}')
 
     except ConnectionResetError:
         logging.info('Connection reset by client.')
