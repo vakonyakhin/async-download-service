@@ -24,8 +24,7 @@ async def get_archive_handler(request):
 
     if not os.path.exists(download_dir):
         logging.info('Directory does not exist')
-        await handle_404(request)
-        return
+        return web.Response(text="Архив не существует или был удален.", status=404)
 
     response = web.StreamResponse()
     response.headers['Content-Type'] = 'application/zip'
