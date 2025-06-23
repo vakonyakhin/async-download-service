@@ -18,8 +18,8 @@ async def get_archive_handler(request):
     delay = int(os.environ['DELAY'])
     storage_dir = os.environ['STORAGE_DIR']
 
-    path = request.match_info.get('archive_hash')
-    download_dir = os.path.join(storage_dir, path)
+    hash_path = request.match_info.get('archive_hash')
+    download_dir = os.path.join(storage_dir, hash_path)
     logging.info(f'Download directory is {download_dir}')
     
     if not os.path.exists(download_dir):
