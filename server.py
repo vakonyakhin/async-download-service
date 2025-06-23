@@ -38,34 +38,32 @@ async def get_archive_handler(request):
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE
         )
-    logging.debug(f'Started ZIP process PID={proc.pid}')
+    logging.info(f'Started ZIP process PID={proc.pid}')
 
     try:
         while not proc.stdout.at_eof():
             stdout_data = await proc.stdout.read(chunk_size_bytes)
-            logging.debug('Reading archive chunk...')
+            logging.info('Reading archive chunk...')
             await response.write(stdout_data)
-            logging.debug('Sent archive chunk.')
+            logging.info('Sent archive chunk.')
             await sleep(delay)
-        logging.debug('Archive streaming complete.')
+        logging.info('Archive streaming complete.')
 
         stdout, stderr = await proc.communicate()
-        logging.debug(
-            f'Final communication with process {proc.pid}')
+        logging.info(f'Final communication with process {proc.pid}')
 
     except ConnectionResetError:
-        logging.debug('Connection reset by client.')
-        logging.debug(f'Terminating ZIP process PID={proc.pid}')
-
+        logging.info('Connection reset by client.')
+        logging.info(f'Terminating ZIP process PID={proc.pid}')
 
     except CancelledError:
-        logging.debug('Coroutine cancelled.')
+        logging.info('Coroutine cancelled.')
         raise
 
     finally:
         if proc.returncode is None:
+            logging.info(f'ZIP process {proc.pid} terminated.')
             proc.terminate()
-            logging.debug(f'ZIP process {proc.pid} terminated.')
         elif proc.returncode != 0:
             logging.error(
                 f'Zip process failed with exit code {proc.returncode}'
@@ -81,7 +79,7 @@ async def handle_404(request):
 if __name__ == '__main__':
     logging_level = os.environ["LOG_LEVEL"]
     logging.basicConfig(filename='app.log', filemode='w', level=logging_level)
-    logging.debug(f'Logging level set to {logging_level}')
+    logging.info(f'Logging level set to {logging_level}')
 
     app = web.Application()
     app.add_routes([
